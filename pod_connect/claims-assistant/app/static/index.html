@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Claims Assistant (prototype)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  body { font: 15px/1.5 -apple-system, "Segoe UI", system-ui, sans-serif; margin: 0; background: #f7f8fa; color: #1f2328; }
+  main { max-width: 720px; margin: 0 auto; padding: 16px; }
+  h1 { font-size: 18px; margin: 8px 0; }
+  .bar { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+  select, input, button { font: inherit; padding: 8px; border: 1px solid #e5e7eb; border-radius: 6px; background: #fff; }
+  button { background: #3b82d4; color: #fff; border-color: #3b82d4; cursor: pointer; }
+  #log { background: #fff; border: 1px solid #e5e7eb; border-radius: 6px; padding: 12px; min-height: 340px; max-height: 60vh; overflow: auto; }
+  .msg { margin: 8px 0; white-space: pre-wrap; }
+  .me { text-align: right; color: #57606a; }
+  .bot { color: #1f2328; }
+  .src { font-size: 12px; color: #57606a; }
+  .esc { font-size: 12px; color: #b45309; }
+  form { display: flex; gap: 8px; margin-top: 8px; }
+  input { flex: 1; }
+  .hint { font-size: 12px; color: #57606a; margin-top: 8px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Claims Assistant <span class="src">(prototype, synthetic data)</span></h1>
+  <div class="bar">
+    <label for="who">Sign in as</label>
+    <select id="who">
+      <option value="demo-token-m1001">Alex Rivera (PPO Gold)</option>
+      <option value="demo-token-m1002">Sam Patel (HMO Basic)</option>
+    </select>
+  </div>
+  <div id="log"></div>
+  <form id="f">
+    <input id="q" placeholder="Why was CLM-000102 denied?" autocomplete="off" maxlength="1000">
+    <button>Send</button>
+  </form>
+  <div class="hint">Try: "Show my claims", "Why was CLM-000102 denied?", "How much deductible is left?", "I want to speak to a person"</div>
+</main>
+<script>
+const log = document.getElementById("log"), q = document.getElementById("q"), who = document.getElementById("who");
+function add(cls, text, extra) {
+  const d = document.createElement("div"); d.className = "msg " + cls; d.textContent = text; log.appendChild(d);
+  if (extra) { const e = document.createElement("div"); e.className = extra.cls; e.textContent = extra.text; log.appendChild(e); }
+  log.scrollTop = log.scrollHeight;
+}
+who.onchange = () => { log.textContent = ""; };
+document.getElementById("f").onsubmit = async (ev) => {
+  ev.preventDefault();
+  const message = q.value.trim(); if (!message) return;
+  add("me", message); q.value = "";
+  try {
+    const r = await fetch("/chat", { method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + who.value },
+      body: JSON.stringify({ message }) });
+    if (!r.ok) { add("bot", "Error " + r.status); return; }
+    const j = await r.json();
+    add("bot", j.answer, j.sources.length ? { cls: "src", text: "Sources: " + j.sources.join(", ") } : null);
+    if (j.escalate) add("bot", "", { cls: "esc", text: "Handed off to a human representative" });
+  } catch (e) { add("bot", "Network error"); }
+};
+</script>
+</body>
+</html>
