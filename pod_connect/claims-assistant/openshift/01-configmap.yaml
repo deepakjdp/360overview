@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: claims-assistant-config
+  labels:
+    app: claims-assistant
+data:
+  # offline = template answers, no key needed.
+  # anthropic = Claude via Anthropic API (needs the secret claims-assistant-llm with ANTHROPIC_API_KEY).
+  # bedrock   = Claude via AWS Bedrock (needs AWS credentials in the secret, or a ROSA/STS role).
+  LLM_PROVIDER: "offline"
+  LLM_MAX_TOKENS: "500"
+  # LLM_MODEL: "claude-sonnet-4-5"
+  # AWS_REGION: "us-east-1"

@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: claims-assistant
+  labels:
+    app: claims-assistant
+  annotations:
+    # Redeploy automatically when a new image is built into the ImageStream tag.
+    image.openshift.io/triggers: >-
+      [{"from":{"kind":"ImageStreamTag","name":"claims-assistant:latest"},
+        "fieldPath":"spec.template.spec.containers[?(@.name==\"claims-assistant\")].image"}]
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: claims-assistant
+  template:
+    metadata:
+      labels:
+        app: claims-assistant
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: claims-assistant
+          image: claims-assistant:latest   # replaced by the ImageStream trigger above
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: claims-assistant-config
+            - secretRef:
+                name: claims-assistant-llm
+                optional: true            # only needed for the anthropic / bedrock backends
+          resources:
+            requests: { cpu: 100m, memory: 128Mi }
+            limits:   { cpu: 500m, memory: 256Mi }
+          readinessProbe:
+            httpGet: { path: /health, port: 8080 }
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            failureThreshold: 3
+          livenessProbe:
+            httpGet: { path: /health, port: 8080 }
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            failureThreshold: 3
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
