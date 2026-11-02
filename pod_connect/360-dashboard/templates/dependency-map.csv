@@ -1,0 +1,5 @@
+from_app_id,to_app_id,interface_type,protocol_or_topic,direction_note,criticality,data_volume_per_day,failure_impact
+APP-004,APP-005,REST,https://contact/api/preferences,Preference change triggers contact,High,5000,Wrong channel used for member outreach
+APP-001,APP-002,Kafka,claims.received,Intake publishes claims for adjudication,High,20000,Claims backlog and payment delay
+APP-002,APP-003,File/SFTP,adjudicated_claims_daily.csv,Daily file feeds capitation reconciliation,Medium,1,Capitation mismatch
+APP-002,APP-005,REST,https://contact/api/notify,Notify member of claim outcome,Medium,15000,Member not informed

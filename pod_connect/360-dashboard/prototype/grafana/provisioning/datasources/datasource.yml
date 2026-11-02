@@ -1,0 +1,16 @@
+apiVersion: 1
+datasources:
+  - name: Reporting DB
+    uid: pg360
+    type: postgres
+    access: proxy
+    url: postgres:5432
+    user: grafana
+    isDefault: true
+    secureJsonData:
+      password: grafana
+    jsonData:
+      database: demo360
+      sslmode: disable
+      postgresVersion: 1500
+      timescaledb: false

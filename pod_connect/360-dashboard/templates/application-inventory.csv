@@ -1,0 +1,6 @@
+app_id,app_name,domain,description,owner_team,owner_contact,tier,platform,environment,health_endpoint,metrics_source,log_index,sla_availability,sla_notes
+APP-001,claims-intake,Claims,Receives claims from providers,Claims Team,claims@example.com,1,OpenShift,prod,https://claims-intake.apps.example.com/health,prometheus,openshift,99.9,
+APP-002,claims-adjudication,Claims,Applies rules and decides claims,Claims Team,claims@example.com,1,OpenShift,prod,https://claims-adj.apps.example.com/health,prometheus,openshift,99.9,
+APP-003,capitation-engine,Capitation,Calculates monthly capitation,Capitation Team,cap@example.com,1,OpenShift,prod,,prometheus,openshift,99.5,Batch monthly
+APP-004,member-preference,Member Preference,Stores member communication preferences,Member Team,member@example.com,2,OpenShift,prod,https://member-pref.apps.example.com/health,prometheus,openshift,99.5,
+APP-005,contact-service,Contact,Sends member communications,Contact Team,contact@example.com,2,OpenShift,prod,https://contact.apps.example.com/health,prometheus,openshift,99.5,

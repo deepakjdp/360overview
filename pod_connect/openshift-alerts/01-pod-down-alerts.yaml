@@ -1,0 +1,113 @@
+# Cluster-wide pod availability alerts (covers all app namespaces / all 100 microservices).
+# Lives in openshift-monitoring with the leaf-prometheus label so the platform Prometheus
+# evaluates it across every namespace (OpenShift 4.11+). Requires cluster-admin.
+#
+# Apply:  oc apply -f 01-pod-down-alerts.yaml
+#
+# To limit to specific namespaces, replace the exclusion regex
+#   namespace!~"openshift-.*|kube-.*|default"
+# with e.g. namespace=~"shop-.*|payments-.*"
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: microservice-pod-alerts
+  namespace: openshift-monitoring
+  labels:
+    openshift.io/prometheus-rule-evaluation-scope: leaf-prometheus
+spec:
+  groups:
+    - name: microservice.pod.availability
+      rules:
+        # Pod is up but failing readiness probe => not responding
+        - alert: PodNotReady
+          expr: |
+            kube_pod_status_ready{condition="false", namespace!~"openshift-.*|kube-.*|default"} == 1
+            and on (namespace, pod)
+            kube_pod_status_phase{phase="Running"} == 1
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Pod {{ $labels.namespace }}/{{ $labels.pod }} is not ready"
+            description: "Pod is Running but failing its readiness probe (not responding) for 2 minutes."
+
+        # Pod is down: stuck Pending / Failed / Unknown
+        - alert: PodNotRunning
+          expr: |
+            kube_pod_status_phase{phase=~"Pending|Failed|Unknown", namespace!~"openshift-.*|kube-.*|default"} == 1
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Pod {{ $labels.namespace }}/{{ $labels.pod }} is {{ $labels.phase }}"
+            description: "Pod has been in phase {{ $labels.phase }} for more than 5 minutes."
+
+        # Container restarting repeatedly
+        - alert: PodCrashLooping
+          expr: |
+            increase(kube_pod_container_status_restarts_total{namespace!~"openshift-.*|kube-.*|default"}[15m]) > 3
+          labels:
+            severity: critical
+          annotations:
+            summary: "Pod {{ $labels.namespace }}/{{ $labels.pod }} is crash looping"
+            description: "Container {{ $labels.container }} restarted more than 3 times in 15 minutes."
+
+        # Stuck waiting: crash loop backoff / image pull problems / bad config
+        - alert: PodContainerWaiting
+          expr: |
+            kube_pod_container_status_waiting_reason{
+              reason=~"CrashLoopBackOff|ImagePullBackOff|ErrImagePull|CreateContainerConfigError",
+              namespace!~"openshift-.*|kube-.*|default"} == 1
+          for: 3m
+          labels:
+            severity: critical
+          annotations:
+            summary: "{{ $labels.namespace }}/{{ $labels.pod }} waiting: {{ $labels.reason }}"
+            description: "Container {{ $labels.container }} stuck in {{ $labels.reason }}."
+
+        - alert: ContainerOOMKilled
+          expr: |
+            kube_pod_container_status_last_terminated_reason{reason="OOMKilled", namespace!~"openshift-.*|kube-.*|default"} == 1
+            and on (namespace, pod, container)
+            increase(kube_pod_container_status_restarts_total[10m]) > 0
+          labels:
+            severity: warning
+          annotations:
+            summary: "{{ $labels.namespace }}/{{ $labels.pod }} container {{ $labels.container }} OOMKilled"
+            description: "Container was killed for exceeding its memory limit. Raise the limit or fix the leak."
+
+        # Whole microservice has zero healthy pods
+        - alert: DeploymentDown
+          expr: |
+            kube_deployment_status_replicas_available{namespace!~"openshift-.*|kube-.*|default"} == 0
+            and
+            kube_deployment_spec_replicas{namespace!~"openshift-.*|kube-.*|default"} > 0
+          for: 1m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Deployment {{ $labels.namespace }}/{{ $labels.deployment }} is DOWN"
+            description: "0 available replicas."
+
+        # Some replicas missing
+        - alert: DeploymentDegraded
+          expr: |
+            kube_deployment_status_replicas_available{namespace!~"openshift-.*|kube-.*|default"}
+              < kube_deployment_spec_replicas{namespace!~"openshift-.*|kube-.*|default"}
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Deployment {{ $labels.namespace }}/{{ $labels.deployment }} degraded"
+            description: "Fewer available replicas than desired for 5 minutes."
+
+        # Same for DeploymentConfig-less StatefulSets
+        - alert: StatefulSetReplicasUnavailable
+          expr: |
+            kube_statefulset_status_replicas_ready{namespace!~"openshift-.*|kube-.*|default"}
+              < kube_statefulset_replicas{namespace!~"openshift-.*|kube-.*|default"}
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "StatefulSet {{ $labels.namespace }}/{{ $labels.statefulset }} has unready replicas"

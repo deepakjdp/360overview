@@ -1,0 +1,1764 @@
+{
+  "uid": "overview360",
+  "title": "360 Overview (prototype, sample data)",
+  "tags": [
+    "360",
+    "prototype"
+  ],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": true,
+  "refresh": "1m",
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "claim_id",
+        "label": "Claim ID",
+        "type": "textbox",
+        "query": "CLM-000001",
+        "current": {
+          "text": "CLM-000001",
+          "value": "CLM-000001"
+        },
+        "options": [
+          {
+            "selected": true,
+            "text": "CLM-000001",
+            "value": "CLM-000001"
+          }
+        ]
+      }
+    ]
+  },
+  "annotations": {
+    "list": []
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "row",
+      "title": "L1  Executive 360: domain health (worst application in each domain)",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Domain health",
+      "description": "Worst effective status of any application in the domain. IMPACTED = an upstream application is DOWN.",
+      "datasource": {
+        "type": "postgres",
+        "uid": "pg360"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 1,
+        "w": 16,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "postgres",
+            "uid": "pg360"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "editorMode": "code",
+          "rawSql": "SELECT domain AS \"Domain\", MAX(status_code) AS \"Status\" FROM v_app_status GROUP BY domain ORDER BY domain"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1
+              },
+              {
+                "color": "orange",
+                "value": 2
+              },
+              {
+                "color": "red",
+                "value": 3
+              }
+            ]
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "HEALTHY",
+                  "color": "green",
+                  "index": 0
+                },
+                "1": {
+                  "text": "DEGRADED",
+                  "color": "yellow",
+                  "index": 1
+                },
+                "2": {
+                  "text": "IMPACTED",
+                  "color": "orange",
+                  "index": 2
+                },
+                "3": {
+                  "text": "DOWN",
+                  "color": "red",
+                  "index": 3
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value_and_name",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": true
+        }
+      }
+    },
+    {
+      "id": 3,
+      "type": "text",
+      "title": "How to read this",
+      "gridPos": {
+        "x": 16,
+        "y": 1,
+        "w": 8,
+        "h": 5
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "**HEALTHY** all applications up  \n**DEGRADED** slow or erroring  \n**IMPACTED** an upstream system is DOWN, so this one cannot work correctly  \n**DOWN** not responding\n\nSample data only. In the demo, `claims-adjudication` is DOWN, so Capitation, Contact and payments show IMPACTED."
+      }
+    },
+    {
+      "id": 4,
+      "type": "row",
+      "title": "L2  Domain view: applications and upstream -> downstream flow",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 6,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "id": 5,
+      "type": "table",
+      "title": "Application status",
+      "description": "",
+      "datasource": {
+        "type": "postgres",
+        "uid": "pg360"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 7,
+        "w": 14,
+        "h": 9
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "postgres",
+            "uid": "pg360"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "editorMode": "code",
+          "rawSql": "SELECT app_name AS \"Application\", domain AS \"Domain\", tier AS \"Tier\", owner_team AS \"Owner\", status_code AS \"Status\", latency_ms AS \"Latency (ms)\", error_rate_pct AS \"Error %\", pod_restarts AS \"Restarts\", checked_at AS \"Last check\" FROM v_app_status ORDER BY status_code DESC, tier, app_name"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Status"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "HEALTHY",
+                        "color": "green",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "DEGRADED",
+                        "color": "yellow",
+                        "index": 1
+                      },
+                      "2": {
+                        "text": "IMPACTED",
+                        "color": "orange",
+                        "index": 2
+                      },
+                      "3": {
+                        "text": "DOWN",
+                        "color": "red",
+                        "index": 3
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 1
+                    },
+                    {
+                      "color": "orange",
+                      "value": 2
+                    },
+                    {
+                      "color": "red",
+                      "value": 3
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true
+      }
+    },
+    {
+      "id": 6,
+      "type": "nodeGraph",
+      "title": "Dependency map (upstream -> downstream)",
+      "description": "Arrows point from upstream to downstream. Colour = effective status.",
+      "datasource": {
+        "type": "postgres",
+        "uid": "pg360"
+      },
+      "gridPos": {
+        "x": 14,
+        "y": 7,
+        "w": 10,
+        "h": 9
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "postgres",
+            "uid": "pg360"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "editorMode": "code",
+          "rawSql": "SELECT app_id AS id, app_name AS title, domain AS \"subTitle\", status AS \"mainStat\", CASE status_code WHEN 0 THEN '#73BF69' WHEN 1 THEN '#FADE2A' WHEN 2 THEN '#FF9830' ELSE '#F2495C' END AS color FROM v_app_status"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "postgres",
+            "uid": "pg360"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "editorMode": "code",
+          "rawSql": "SELECT from_app_id || '>' || to_app_id AS id, from_app_id AS source, to_app_id AS target, interface_type AS \"mainStat\" FROM dependencies"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {}
+    },
+    {
+      "id": 7,
+      "type": "table",
+      "title": "Flow hops with status of both ends",
+      "description": "",
+      "datasource": {
+        "type": "postgres",
+        "uid": "pg360"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 16,
+        "w": 24,
+        "h": 6
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "postgres",
+            "uid": "pg360"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "editorMode": "code",
+          "rawSql": "SELECT u.app_name AS \"Upstream\", u.status_code AS \"Upstream status\", d.interface_type AS \"Interface\", n.app_name AS \"Downstream\", n.status_code AS \"Downstream status\", d.criticality AS \"Criticality\" FROM dependencies d JOIN v_app_status u ON u.app_id = d.from_app_id JOIN v_app_status n ON n.app_id = d.to_app_id ORDER BY GREATEST(u.status_code, n.status_code) DESC"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Upstream status"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "HEALTHY",
+                        "color": "green",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "DEGRADED",
+                        "color": "yellow",
+                        "index": 1
+                      },
+                      "2": {
+                        "text": "IMPACTED",
+                        "color": "orange",
+                        "index": 2
+                      },
+                      "3": {
+                        "text": "DOWN",
+                        "color": "red",
+                        "index": 3
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 1
+                    },
+                    {
+                      "color": "orange",
+                      "value": 2
+                    },
+                    {
+                      "color": "red",
+                      "value": 3
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Downstream status"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "HEALTHY",
+                        "color": "green",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "DEGRADED",
+                        "color": "yellow",
+                        "index": 1
+                      },
+                      "2": {
+                        "text": "IMPACTED",
+                        "color": "orange",
+                        "index": 2
+                      },
+                      "3": {
+                        "text": "DOWN",
+                        "color": "red",
+                        "index": 3
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 1
+                    },
+                    {
+                      "color": "orange",
+                      "value": 2
+                    },
+                    {
+                      "color": "red",
+                      "value": 3
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true
+      }
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "Error rate by application (%)",
+      "description": "",
+      "datasource": {
+        "type": "postgres",
+        "uid": "pg360"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 22,
+        "w": 24,
+        "h": 7
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "postgres",
+            "uid": "pg360"
+          },
+          "format": "time_series",
+          "rawQuery": true,
+          "editorMode": "code",
+          "rawSql": "SELECT $__timeGroupAlias(h.checked_at,'15m'), a.app_name AS metric, avg(h.error_rate_pct) AS value FROM app_health h JOIN applications a USING (app_id) WHERE $__timeFilter(h.checked_at) GROUP BY 1,2 ORDER BY 1"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      }
+    },
+    {
+      "id": 9,
+      "type": "row",
+      "title": "Claims processing",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 29,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "id": 10,
+      "type": "stat",
+      "title": "Received (period)",
+      "description": "",
+      "datasource": {
+        "type": "postgres",
+        "uid": "pg360"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 30,
+        "w": 4,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "postgres",
+            "uid": "pg360"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "editorMode": "code",
+          "rawSql": "SELECT count(*) AS value FROM claims WHERE $__timeFilter(received_at)"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "id": 11,
+      "type": "stat",
+      "title": "Waiting for adjudication",
+      "description": "Backlog. Grows when claims-adjudication is down.",
+      "datasource": {
+        "type": "postgres",
+        "uid": "pg360"
+      },
+      "gridPos": {
+        "x": 4,
+        "y": 30,
+        "w": 4,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "postgres",
+            "uid": "pg360"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "editorMode": "code",
+          "rawSql": "SELECT count(*) AS value FROM claims WHERE status = 'RECEIVED'"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 25
+              },
+              {
+                "color": "red",
+                "value": 75
+              }
+            ]
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "id": 12,
+      "type": "stat",
+      "title": "Oldest waiting claim (min)",
+      "description": "",
+      "datasource": {
+        "type": "postgres",
+        "uid": "pg360"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 30,
+        "w": 4,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "postgres",
+            "uid": "pg360"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "editorMode": "code",
+          "rawSql": "SELECT COALESCE(round(extract(epoch FROM now() - min(received_at))/60), 0) AS value FROM claims WHERE status = 'RECEIVED'"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "m",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 30
+              },
+              {
+                "color": "red",
+                "value": 120
+              }
+            ]
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "id": 13,
+      "type": "stat",
+      "title": "Rejection rate",
+      "description": "",
+      "datasource": {
+        "type": "postgres",
+        "uid": "pg360"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 30,
+        "w": 4,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "postgres",
+            "uid": "pg360"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "editorMode": "code",
+          "rawSql": "SELECT round(100.0 * count(*) FILTER (WHERE status = 'REJECTED') / NULLIF(count(*),0), 1) AS value FROM claims WHERE $__timeFilter(received_at)"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 8
+              },
+              {
+                "color": "red",
+                "value": 15
+              }
+            ]
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "id": 14,
+      "type": "stat",
+      "title": "Adjudicated within 4h (SLA 95%)",
+      "description": "Only claims older than 4h are measured, so open claims do not distort the SLA.",
+      "datasource": {
+        "type": "postgres",
+        "uid": "pg360"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 30,
+        "w": 4,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "postgres",
+            "uid": "pg360"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "editorMode": "code",
+          "rawSql": "SELECT round(100.0 * count(*) FILTER (WHERE adjudicated_at - received_at <= interval '4 hours') / NULLIF(count(*),0), 1) AS value FROM claims WHERE $__timeFilter(received_at) AND received_at < now() - interval '4 hours'"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 90
+              },
+              {
+                "color": "green",
+                "value": 95
+              }
+            ]
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "id": 15,
+      "type": "stat",
+      "title": "Avg intake to paid (h)",
+      "description": "",
+      "datasource": {
+        "type": "postgres",
+        "uid": "pg360"
+      },
+      "gridPos": {
+        "x": 20,
+        "y": 30,
+        "w": 4,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "postgres",
+            "uid": "pg360"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "editorMode": "code",
+          "rawSql": "SELECT round(avg(extract(epoch FROM paid_at - received_at))/3600, 1) AS value FROM claims WHERE paid_at IS NOT NULL AND $__timeFilter(received_at)"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "h",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "id": 16,
+      "type": "timeseries",
+      "title": "Claims per hour: received vs adjudicated vs paid",
+      "description": "",
+      "datasource": {
+        "type": "postgres",
+        "uid": "pg360"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 34,
+        "w": 16,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "postgres",
+            "uid": "pg360"
+          },
+          "format": "time_series",
+          "rawQuery": true,
+          "editorMode": "code",
+          "rawSql": "SELECT $__timeGroupAlias(received_at,'1h'), count(*) AS received FROM claims WHERE $__timeFilter(received_at) GROUP BY 1 ORDER BY 1"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "postgres",
+            "uid": "pg360"
+          },
+          "format": "time_series",
+          "rawQuery": true,
+          "editorMode": "code",
+          "rawSql": "SELECT $__timeGroupAlias(adjudicated_at,'1h'), count(*) AS adjudicated FROM claims WHERE adjudicated_at IS NOT NULL AND $__timeFilter(adjudicated_at) GROUP BY 1 ORDER BY 1"
+        },
+        {
+          "refId": "C",
+          "datasource": {
+            "type": "postgres",
+            "uid": "pg360"
+          },
+          "format": "time_series",
+          "rawQuery": true,
+          "editorMode": "code",
+          "rawSql": "SELECT $__timeGroupAlias(paid_at,'1h'), count(*) AS paid FROM claims WHERE paid_at IS NOT NULL AND $__timeFilter(paid_at) GROUP BY 1 ORDER BY 1"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      }
+    },
+    {
+      "id": 17,
+      "type": "table",
+      "title": "Claims by status",
+      "description": "",
+      "datasource": {
+        "type": "postgres",
+        "uid": "pg360"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 34,
+        "w": 8,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "postgres",
+            "uid": "pg360"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "editorMode": "code",
+          "rawSql": "SELECT status AS \"Status\", count(*) AS \"Claims\", COALESCE(sum(amount),0) AS \"Amount\" FROM claims WHERE $__timeFilter(received_at) GROUP BY status ORDER BY 2 DESC"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Status"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "RECEIVED": {
+                        "text": "RECEIVED",
+                        "color": "orange",
+                        "index": 0
+                      },
+                      "ADJUDICATED": {
+                        "text": "ADJUDICATED",
+                        "color": "blue",
+                        "index": 1
+                      },
+                      "PAID": {
+                        "text": "PAID",
+                        "color": "green",
+                        "index": 2
+                      },
+                      "REJECTED": {
+                        "text": "REJECTED",
+                        "color": "red",
+                        "index": 3
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true
+      }
+    },
+    {
+      "id": 18,
+      "type": "row",
+      "title": "Capitation",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 42,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "id": 19,
+      "type": "table",
+      "title": "Monthly capitation runs",
+      "description": "Reconciliation: Missing should be 0 for COMPLETED runs.",
+      "datasource": {
+        "type": "postgres",
+        "uid": "pg360"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 43,
+        "w": 24,
+        "h": 7
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "postgres",
+            "uid": "pg360"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "editorMode": "code",
+          "rawSql": "SELECT run_month AS \"Month\", status AS \"Status\", record_count AS \"Records\", expected_count AS \"Expected\", expected_count - record_count AS \"Missing\", amount_total AS \"Amount\", started_at AS \"Started\", finished_at AS \"Finished\" FROM capitation_runs ORDER BY run_month DESC"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Status"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "COMPLETED": {
+                        "text": "COMPLETED",
+                        "color": "green",
+                        "index": 0
+                      },
+                      "RUNNING": {
+                        "text": "RUNNING",
+                        "color": "blue",
+                        "index": 1
+                      },
+                      "FAILED": {
+                        "text": "FAILED",
+                        "color": "red",
+                        "index": 2
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true
+      }
+    },
+    {
+      "id": 20,
+      "type": "row",
+      "title": "Member preference and Contact",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 50,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "id": 21,
+      "type": "stat",
+      "title": "Preference changes delivered within 15 min (SLA 99%)",
+      "description": "",
+      "datasource": {
+        "type": "postgres",
+        "uid": "pg360"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 51,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "postgres",
+            "uid": "pg360"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "editorMode": "code",
+          "rawSql": "SELECT round(100.0 * count(*) FILTER (WHERE delivered_at - changed_at <= interval '15 minutes') / NULLIF(count(*),0), 1) AS value FROM preference_changes WHERE $__timeFilter(changed_at) AND changed_at < now() - interval '15 minutes'"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 95
+              },
+              {
+                "color": "green",
+                "value": 99
+              }
+            ]
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "id": 22,
+      "type": "stat",
+      "title": "Preference changes failed or pending",
+      "description": "",
+      "datasource": {
+        "type": "postgres",
+        "uid": "pg360"
+      },
+      "gridPos": {
+        "x": 6,
+        "y": 51,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "postgres",
+            "uid": "pg360"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "editorMode": "code",
+          "rawSql": "SELECT count(*) AS value FROM preference_changes WHERE status IN ('FAILED','PENDING')"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 5
+              },
+              {
+                "color": "red",
+                "value": 25
+              }
+            ]
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "id": 23,
+      "type": "stat",
+      "title": "Contact bounce rate",
+      "description": "",
+      "datasource": {
+        "type": "postgres",
+        "uid": "pg360"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 51,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "postgres",
+            "uid": "pg360"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "editorMode": "code",
+          "rawSql": "SELECT round(100.0 * count(*) FILTER (WHERE status = 'BOUNCED') / NULLIF(count(*),0), 1) AS value FROM contact_requests WHERE $__timeFilter(requested_at)"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 5
+              },
+              {
+                "color": "red",
+                "value": 10
+              }
+            ]
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "id": 24,
+      "type": "stat",
+      "title": "Contact queue (waiting)",
+      "description": "",
+      "datasource": {
+        "type": "postgres",
+        "uid": "pg360"
+      },
+      "gridPos": {
+        "x": 18,
+        "y": 51,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "postgres",
+            "uid": "pg360"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "editorMode": "code",
+          "rawSql": "SELECT count(*) AS value FROM contact_requests WHERE status = 'QUEUED'"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 50
+              },
+              {
+                "color": "red",
+                "value": 200
+              }
+            ]
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "id": 25,
+      "type": "timeseries",
+      "title": "Preference changes per hour by status",
+      "description": "",
+      "datasource": {
+        "type": "postgres",
+        "uid": "pg360"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 55,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "postgres",
+            "uid": "pg360"
+          },
+          "format": "time_series",
+          "rawQuery": true,
+          "editorMode": "code",
+          "rawSql": "SELECT $__timeGroupAlias(changed_at,'1h'), status AS metric, count(*) AS value FROM preference_changes WHERE $__timeFilter(changed_at) GROUP BY 1,2 ORDER BY 1"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 20,
+            "showPoints": "never",
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      }
+    },
+    {
+      "id": 26,
+      "type": "timeseries",
+      "title": "Contact requests per hour by status",
+      "description": "",
+      "datasource": {
+        "type": "postgres",
+        "uid": "pg360"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 55,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "postgres",
+            "uid": "pg360"
+          },
+          "format": "time_series",
+          "rawQuery": true,
+          "editorMode": "code",
+          "rawSql": "SELECT $__timeGroupAlias(requested_at,'1h'), status AS metric, count(*) AS value FROM contact_requests WHERE $__timeFilter(requested_at) GROUP BY 1,2 ORDER BY 1"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 20,
+            "showPoints": "never",
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      }
+    },
+    {
+      "id": 27,
+      "type": "row",
+      "title": "L4  Transaction trace: type a claim ID in the box at the top (e.g. CLM-000001)",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 63,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "id": 28,
+      "type": "table",
+      "title": "Claim timeline",
+      "description": "Shows where the claim is in the flow. In production the key would be a correlation ID across all systems.",
+      "datasource": {
+        "type": "postgres",
+        "uid": "pg360"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 64,
+        "w": 24,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "postgres",
+            "uid": "pg360"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "editorMode": "code",
+          "rawSql": "SELECT claim_id AS \"Claim\", member_id AS \"Member\", status AS \"Status\", received_at AS \"1 Received\", adjudicated_at AS \"2 Adjudicated\", paid_at AS \"3 Paid\", amount AS \"Amount\", round(extract(epoch FROM COALESCE(paid_at, now()) - received_at)/60) AS \"Minutes in flow\" FROM claims WHERE claim_id = '$claim_id'"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Status"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "RECEIVED": {
+                        "text": "RECEIVED",
+                        "color": "orange",
+                        "index": 0
+                      },
+                      "ADJUDICATED": {
+                        "text": "ADJUDICATED",
+                        "color": "blue",
+                        "index": 1
+                      },
+                      "PAID": {
+                        "text": "PAID",
+                        "color": "green",
+                        "index": 2
+                      },
+                      "REJECTED": {
+                        "text": "REJECTED",
+                        "color": "red",
+                        "index": 3
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true
+      }
+    },
+    {
+      "id": 29,
+      "type": "table",
+      "title": "Same member: recent preference changes and contacts",
+      "description": "",
+      "datasource": {
+        "type": "postgres",
+        "uid": "pg360"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 68,
+        "w": 24,
+        "h": 7
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "postgres",
+            "uid": "pg360"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "editorMode": "code",
+          "rawSql": "SELECT 'Preference' AS \"Type\", changed_at AS \"When\", status AS \"Status\", '' AS \"Channel\" FROM preference_changes WHERE member_id = (SELECT member_id FROM claims WHERE claim_id = '$claim_id') UNION ALL SELECT 'Contact', requested_at, status, channel FROM contact_requests WHERE member_id = (SELECT member_id FROM claims WHERE claim_id = '$claim_id') ORDER BY 2 DESC LIMIT 50"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true
+      }
+    }
+  ]
+}

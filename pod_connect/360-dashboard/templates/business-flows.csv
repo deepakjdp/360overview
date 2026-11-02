@@ -1,0 +1,4 @@
+flow_id,flow_name,domain,steps_app_ids,business_question,sla_target,sla_measure,owner
+F-001,Claim received to paid,Claims,APP-001>APP-002>APP-003,Are claims paid on time?,95% within 4h adjudication,adjudicated_at - received_at,Claims Team
+F-002,Preference change to contact,Member Preference,APP-004>APP-005,Do preference changes reach Contact?,99% within 15 min,delivered_at - changed_at,Member Team
+F-003,Monthly capitation run,Capitation,APP-003,Did the monthly run complete?,Complete by day 5,run_end vs due date,Capitation Team
